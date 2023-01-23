@@ -31,13 +31,16 @@ class ConnectionPool:
             self.create_new_connection(self, initialization)
 
     def get_connection(self):
-        if len (self.pool) >= self.max_connections:
-            raise PoolError("Connection Pool is full, you must wait for connection")
-        for connection in self.pool:
-            if connection not in self.used:
-                self.used.append(connection)
-                return connection
-        return self.create_new_connection(False)
+        try:
+            if len (self.pool) >= self.max_connections:
+                raise PoolError("Connection Pool is full, you must wait for connection")
+            for connection in self.pool:
+                if connection not in self.used:
+                    self.used.append(connection)
+                    return connection
+            return self.create_new_connection(False)
+        except PoolError:
+            pass
 
     def put_connection(self, connection):
         connection.close()
