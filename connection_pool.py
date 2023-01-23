@@ -1,24 +1,24 @@
 import psycopg2
-import sched, time
+from apscheduler.schedulers.background import BackgroundScheduler
+import time
 
 class PoolError(psycopg2.Error):
     pass
 
 class ConnectionPool:
+    
     def __init__(self, dsn):
         self.pool = []
         self.used = []
         self.max_connections = 100
-        self.dsn = dsn   # "postgres://YourUserName:YourPassword@YourHostname:5432/YourDatabaseName";
-
-        self.create_start_connections(True)
-        self.free_up = sched.scheduler(time.time, time.sleep)
-        self.free_up.enter(60, 1, self.free_up_resources, (self.free_up, ))
-        self.free_up.run() 
+        self.dsn = dsn   # "postgres://YourUserName:YourPassword@YourHostname:5432/YourDatabaseName"
+        self.run_schedule()
+        self.create_start_connections()
+        
 
     def create_start_connections(self):
         for _ in range(10):
-            self.create_new_connection()
+            self.create_new_connection(True)
 
     def create_new_connection(self, initialization: bool):
         try:
@@ -43,8 +43,7 @@ class ConnectionPool:
         connection.close()
         self.used.remove(connection)
 
-    def free_up_resources(self, runnable_task):
-        runnable_task.enter(60, 1, self.free_up_resources, (runnable_task,))
+    def free_up_resources(self):
         print("Checking the number of connections...")
         deleted_connections = 0
         for connection in self.pool:
@@ -55,11 +54,11 @@ class ConnectionPool:
                 deleted_connections += 1
         print(f"{deleted_connections} connections have been deleted.")
 
-    
-    
-                
-
-
+    def run_schedule(self):
+        self.sched = BackgroundScheduler()
+        self.sched.add_job(self.free_up_resources, "interval", seconds=10)
+        self.sched.start()
+        
 
 
 
