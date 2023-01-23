@@ -21,11 +21,14 @@ class ConnectionPool:
             self.create_new_connection()
 
     def create_new_connection(self, initialization: bool):
-        connection = psycopg2.connect(self.dsn)
-        self.pool.append(connection)
-        if initialization == False:  # when 11th connection is comming, I made it this way to avoid repeating
-            self.used.append(connection)
-        return connection
+        try:
+            connection = psycopg2.connect(self.dsn)
+            self.pool.append(connection)
+            if initialization == False:  # when 11th connection is comming, I made it this way to avoid repeating
+                self.used.append(connection)
+            return connection
+        except PoolError:
+            self.create_new_connection(self, initialization)
 
     def get_connection(self):
         if len (self.pool) >= self.max_connections:
@@ -35,6 +38,10 @@ class ConnectionPool:
                 self.used.append(connection)
                 return connection
         return self.create_new_connection(False)
+
+    def put_connection(self, connection):
+        connection.close()
+        self.used.remove(connection)
 
     def free_up_resources(self, runnable_task):
         runnable_task.enter(60, 1, self.free_up_resources, (runnable_task,))
@@ -46,7 +53,10 @@ class ConnectionPool:
             if connection not in self.used:
                 self.pool.remove(connection)
                 deleted_connections += 1
-        return f"{deleted_connections} connections have been deleted."
+        print(f"{deleted_connections} connections have been deleted.")
+
+    
+    
                 
 
 
