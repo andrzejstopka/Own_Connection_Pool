@@ -20,8 +20,7 @@ while elapsed_time <= 600:  # 600 seconds == 10 minutes
     time.sleep(random.randint(1, 5))
     elapsed_time = time.time() - start_time
     print(elapsed_time)
-    print(len(connection_pool.pool))
-    print(len(connection_pool.used))
+    
 
 
 
