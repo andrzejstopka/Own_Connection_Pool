@@ -35,6 +35,7 @@ class ConnectionPool:
                 self.used_lock.acquire()
                 self.used.append(connection)
                 self.used_lock.release()
+            print("Connection successfully established")
             return connection
         except PoolError:
             self.create_new_connection(self, initialization)
@@ -48,6 +49,7 @@ class ConnectionPool:
                     self.used_lock.acquire()
                     self.used.append(connection)
                     self.used_lock.release()
+                    print("Connection successfully established")
                     return connection
             return self.create_new_connection(False)
         except PoolError:
@@ -56,12 +58,14 @@ class ConnectionPool:
     def put_connection(self, connection):
         connection.close()
         self.used_lock.acquire()
+        print("The connection was successfully terminated")
         self.used.remove(connection)
         self.used_lock.release()
 
     def free_up_resources(self):
+        print("-------------------------------------------------------")
         print("Checking the number of connections...")
-        print(len(self.pool), "-", len(self.used))
+        print(f"Pool length: {len(self.pool)} - Used length: {len(self.used)}")
         deleted_connections = 0
         for connection in self.pool:
             if len(self.pool) == 10:
@@ -70,7 +74,9 @@ class ConnectionPool:
                 self.pool.remove(connection)
                 deleted_connections += 1    
         print(f"{deleted_connections} connections have been deleted.")
-        print(len(self.pool), "-", len(self.used))
+        print(f"Pool length: {len(self.pool)} - Used length: {len(self.used)}")
+        print("-------------------------------------------------------")
+
 
         
 
