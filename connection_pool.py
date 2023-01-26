@@ -57,7 +57,6 @@ class ConnectionPool:
             print("Connection Pool is full, you must wait for connection")
 
     def put_connection(self, connection):
-        connection.close()
         self.used_lock.acquire()
         print("The connection was successfully terminated")
         self.used.remove(connection)
@@ -87,6 +86,6 @@ class ConnectionPool:
 
     def run_schedule(self):
         self.sched = BackgroundScheduler()
-        self.sched.add_job(self.free_up_resources, "interval", seconds=10)
+        self.sched.add_job(self.free_up_resources, "interval", seconds=60)
         self.sched.start()
 
