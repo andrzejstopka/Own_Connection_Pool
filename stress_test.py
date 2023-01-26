@@ -11,7 +11,7 @@ elapsed_time = 0
 start_time = time.time()
   
 while elapsed_time <= 600:    # 600 seconds == 10 minutes
-    for _ in range(random.randint(1, 3)):
+    for _ in range(random.randint(1, 40)):
         thread = threading.Thread(target=connection_pool.get_connection)
         connection_pool.thread_list.append(thread)
     try:
