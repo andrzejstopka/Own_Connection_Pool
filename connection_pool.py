@@ -3,6 +3,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import threading
 
 
+
 class PoolError(psycopg2.Error):
     pass
 
@@ -15,8 +16,8 @@ class ConnectionPool:
         self.dsn = dsn   # "postgres://YourUserName:YourPassword@YourHostname:5432/YourDatabaseName"
         self.pool_lock = threading.Lock()
         self.used_lock = threading.Lock()
+        self.thread_list = []
         self.run_schedule()
-    
         self.create_start_connections()
 
         
@@ -43,7 +44,7 @@ class ConnectionPool:
     def get_connection(self):
         try:
             if len (self.pool) >= self.max_connections:
-                raise PoolError("Connection Pool is full, you must wait for connection")
+                raise PoolError
             for connection in self.pool:
                 if connection not in self.used:
                     self.used_lock.acquire()
@@ -51,9 +52,9 @@ class ConnectionPool:
                     self.used_lock.release()
                     print("Connection successfully established")
                     return connection
-            return self.create_new_connection(False)
+            self.create_new_connection(False)
         except PoolError:
-            pass
+            print("Connection Pool is full, you must wait for connection")
 
     def put_connection(self, connection):
         connection.close()
@@ -67,30 +68,25 @@ class ConnectionPool:
         print("Checking the number of connections...")
         print(f"Pool length: {len(self.pool)} - Used length: {len(self.used)}")
         deleted_connections = 0
+        self.pool_lock.acquire()
+        self.used_lock.acquire()
         for connection in self.pool:
-            if len(self.pool) == 10:
+            if len(self.pool) <= 10:
                 break
             if connection not in self.used:
                 self.pool.remove(connection)
-                deleted_connections += 1    
+                deleted_connections += 1   
+        self.pool_lock.release()
+        self.used_lock.release() 
         print(f"{deleted_connections} connections have been deleted.")
         print(f"Pool length: {len(self.pool)} - Used length: {len(self.used)}")
         print("-------------------------------------------------------")
-
-
         
+        
+
 
     def run_schedule(self):
         self.sched = BackgroundScheduler()
         self.sched.add_job(self.free_up_resources, "interval", seconds=10)
         self.sched.start()
 
-    
-
-
-    
-
-
-
-    
-        
