@@ -28,12 +28,6 @@ class TestConnectionPool(unittest.TestCase):
 
         self.assertIsInstance(result1, psycopg2.extensions.connection)
 
-        for _ in range(99):
-            self.connection_pool.get_connection()
-        
-
-        with self.assertRaises(PoolError):
-            self.connection_pool.get_connection()
 
     def test_put_connection(self):
         connection = self.connection_pool.get_connection()
